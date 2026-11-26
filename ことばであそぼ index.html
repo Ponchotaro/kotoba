@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ことばであそぼ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: やさしく、まるく、あかちゃんが触って楽しい
+   IDEA: 絵本のページ。空と草原の舞台で、ことばが動き出す
+   PICTURE: 手描き風オリジナルイラストが画面を横切る
+   COLOUR and TYPE: 空色、草の緑、パステルのボタン。Zen Maru Gothic
+   LAYOUT: たて=上にお名前・下に30ボタン / よこ(テレビ)=左にお名前・右に10×3 */
+:root{color-scheme:light dark;--sky:light-dark(#bfe6ff,#1b2550);--sky2:light-dark(#eaf7ff,#2c3a72);--grass:light-dark(#9bd77a,#2f5b3a);--ink:light-dark(#3a2e2a,#fff5e8);--card:light-dark(#ffffff,#2a2f4f);--accent:#ff7a59}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font:16px/1.5 "Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;overflow-x:clip;user-select:none;-webkit-user-select:none;touch-action:manipulation;
+background:linear-gradient(var(--sky) 0,var(--sky2) 62%,var(--grass) 62%,var(--grass) 100%) fixed;
+padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+header{display:flex;gap:10px;align-items:center;padding:max(14px,env(safe-area-inset-top)) 14px 8px;max-width:1000px;margin:0 auto}
+#call{flex:1;display:flex;align-items:center;gap:12px;border:0;border-radius:28px;padding:10px 18px;min-height:80px;background:var(--accent);color:#fff;font:900 clamp(20px,5.5vw,30px)/1.1 inherit;font-family:inherit;box-shadow:0 6px 0 #d4553a;cursor:pointer}
+#call:active{transform:translateY(4px);box-shadow:0 2px 0 #d4553a}
+#call small{display:block;font-size:13px;font-weight:700;opacity:.92}
+#call .bb{width:60px;height:60px;flex:none}
+.tools{display:flex;gap:8px}
+.tools button{width:48px;height:48px;border-radius:50%;border:0;background:var(--card);color:var(--ink);font:700 20px inherit;cursor:pointer;opacity:.8}
+#qbtn{flex:none;display:flex;align-items:center;gap:6px;border:0;border-radius:28px;padding:8px 14px;min-height:80px;background:#4aa8f0;color:#fff;font:900 22px/1.1 inherit;font-family:inherit;box-shadow:0 6px 0 #2f86c9;cursor:pointer}
+#qbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #2f86c9}
+#qbtn svg{width:44px;height:44px}
+@media (orientation:portrait),(max-width:599px){
+  header{flex-wrap:nowrap}
+  #call .bb{width:46px;height:46px}
+  #call{padding:10px 12px;gap:8px}
+  #qbtn{flex-direction:column;justify-content:center;padding:6px 10px;font-size:17px}
+  #qbtn svg{width:36px;height:36px}
+  .tools{flex-direction:column}
+  .tools button{width:38px;height:38px;font-size:16px}
+}
+#quiz{position:fixed;inset:0;z-index:18;display:none;flex-direction:column;background:linear-gradient(var(--sky),var(--sky2));padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#quiz.on{display:flex}
+.qtop{display:flex;align-items:center;gap:10px;padding:12px 14px 4px}
+.qb{flex:none;width:56px;height:56px;border-radius:50%;border:0;background:var(--card);color:var(--ink);font:900 24px inherit;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+#qtext{flex:1;text-align:center;font-weight:900;font-size:clamp(26px,5vw,60px);line-height:1.15}
+#qdots{display:flex;gap:8px;justify-content:center;padding:2px 0 6px}
+.dot{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.7);border:2px solid #4a3426}
+.dot.on{background:#ffd84a}
+#qcards{flex:1;min-height:0;display:grid;gap:clamp(12px,2.4vw,32px);padding:8px clamp(14px,4vw,64px) 22px;grid-template-columns:repeat(var(--c),minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+.qc{position:relative;border:0;border-radius:32px;background:#fff;box-shadow:0 7px 0 rgba(0,0,0,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:0;overflow:hidden;font-family:inherit;color:#3a2e2a}
+.qc svg{width:auto;height:72%;max-width:80%}
+.qc span{font-weight:900;font-size:clamp(16px,2.6vw,30px);visibility:hidden}
+.qc.show span{visibility:visible}
+.qc.ok{outline:8px solid #7bd88f;animation:yes .7s}
+.qc.no{animation:shake .45s}
+.qc.hint{animation:glow 1s ease-in-out infinite}
+@keyframes yes{30%{transform:scale(1.08)}60%{transform:scale(.96)}}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+@keyframes glow{50%{transform:scale(1.05);box-shadow:0 0 0 12px #ffd84a}}
+#qstat{font-size:14px;line-height:1.7}
+main{max-width:1000px;margin:0 auto;padding:8px 12px calc(24px + env(safe-area-inset-bottom))}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.w{border:0;border-radius:24px;padding:8px 4px 8px;min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:inherit;font-weight:900;font-size:15px;line-height:1.2;color:#3a2e2a;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.14);transition:transform .08s;white-space:nowrap}
+.w svg{width:62px;height:62px;flex:none;color:#ff6b6b}
+.w span{font-size:clamp(11px,3.4vw,15px)}
+.w:active,.w.hit{transform:scale(.9) translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.14)}
+button:focus-visible{outline:4px solid #2b7cff;outline-offset:2px}
+#hint{text-align:center;font-size:13px;opacity:.7;margin:14px 0 0}
+
+/* よこ画面・テレビ:1画面に全部 */
+@media (orientation:landscape) and (min-width:600px){
+  body{display:grid;grid-template-columns:clamp(130px,17vw,240px) minmax(0,1fr);height:100dvh;overflow:hidden}
+  header{flex-direction:column;align-items:stretch;height:100dvh;margin:0;padding:max(12px,env(safe-area-inset-top)) 6px max(12px,env(safe-area-inset-bottom)) 12px}
+  #call{flex-direction:column;justify-content:center;text-align:center;font-size:clamp(15px,2vw,32px);padding:10px 6px;word-break:keep-all;overflow-wrap:anywhere}
+  #call small{font-size:clamp(10px,1.1vw,16px);white-space:nowrap}
+  #call .bb{width:clamp(56px,9vw,130px);height:clamp(56px,9vw,130px)}
+  .tools{justify-content:center}
+  #qbtn{justify-content:center;font-size:clamp(16px,2vw,30px);min-height:clamp(60px,14vh,120px)}
+  #qbtn svg{width:clamp(32px,4vw,64px);height:clamp(32px,4vw,64px)}
+  main{max-width:none;margin:0;height:100dvh;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom)) 6px}
+  #grid{height:100%;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(6px,1vw,14px)}
+  .w{min-height:0;border-radius:clamp(14px,2vw,28px)}
+  .w svg{width:auto;height:62%;max-width:90%}
+  .w span{font-size:clamp(9px,1.2vw,22px);letter-spacing:-.04em}
+  #hint{display:none}
+}
+
+#fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.fx{position:absolute;left:0;top:0;will-change:transform}
+.fx svg{width:100%;height:100%;display:block;overflow:visible}
+.cf{position:absolute;left:0;top:0;width:12px;height:18px;border-radius:3px}
+.big{position:absolute;left:0;right:0;text-align:center;font-weight:900;color:#fff;-webkit-text-stroke:2px #ff7a59;font-size:clamp(34px,8vw,96px);line-height:1.1;text-shadow:0 4px 0 #ff7a59}
+
+.ov{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(20,30,60,.45)}
+.ov.on{display:flex}
+.box{background:var(--card);border-radius:28px;padding:22px;width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);user-select:text;-webkit-user-select:text}
+.box h2{margin:0 0 6px;font-size:22px}
+.box p{margin:4px 0 12px;font-size:14px;opacity:.8}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input[type=text],select{width:100%;font:16px inherit;font-family:inherit;padding:11px 14px;border-radius:14px;border:2px solid #cdd8e6;background:transparent;color:var(--ink)}
+select option{color:#222}
+.seg{display:flex;gap:8px}.seg label{flex:1;margin:0}
+.seg input{position:absolute;opacity:0}
+.seg span{display:block;text-align:center;padding:10px;border-radius:14px;border:2px solid #cdd8e6;cursor:pointer;min-height:44px}
+.seg input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff}
+.row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{flex:1;min-height:48px;border-radius:16px;border:0;font:700 15px inherit;font-family:inherit;cursor:pointer;background:#e9eef5;color:#3a2e2a;padding:0 12px}
+.btn.pri{background:var(--accent);color:#fff}
+.chk{display:flex;align-items:center;gap:10px;font-weight:700;margin-top:14px}
+.chk input{width:22px;height:22px;accent-color:var(--accent)}
+#listen .box{text-align:center}
+#lname{font-size:clamp(30px,8vw,52px);font-weight:900;margin:4px 0}
+.mic{width:120px;height:120px;margin:10px auto;border-radius:50%;display:grid;place-items:center;background:#ffe3d9;transform:scale(calc(1 + var(--lv,0)));transition:transform .08s}
+.mic svg{width:70px;height:70px}
+.mic.wait{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 18px rgba(255,122,89,.18)}}
+#hai{width:100%;min-height:64px;font-size:22px;margin-top:8px}
+#mnote{font-size:13px;opacity:.75;margin:8px 0 0}
+.fl{display:grid;gap:6px;margin-top:8px}
+.fr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,.2)}
+.fr b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr b i{font-style:normal;font-size:12px;color:#2c9a5a;margin-left:6px}
+.sm{min-height:40px;min-width:44px;border-radius:12px;border:0;background:#e9eef5;color:#3a2e2a;font:700 14px inherit;font-family:inherit;cursor:pointer;display:grid;place-items:center;padding:0 10px;margin:0}
+.sm input{display:none}
+.sm[disabled]{opacity:.35}
+#rec .box{text-align:center}
+.rtabs{display:flex;gap:6px;margin-bottom:10px}.rtabs button{flex:1;min-height:44px;border-radius:12px;border:2px solid #cdd8e6;background:transparent;color:var(--ink);font:700 13px inherit;font-family:inherit;cursor:pointer}
+.rtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#rpic{width:110px;height:110px;margin:4px auto}
+#rtxt{font-size:clamp(24px,7vw,34px);font-weight:900;line-height:1.2;margin:4px 0}
+#rcount{font-size:13px;opacity:.7}
+#rgo{width:96px;height:96px;border-radius:50%;border:6px solid #fff;background:#ff5a5a;box-shadow:0 0 0 3px #ff5a5a;margin:14px auto 6px;display:block;cursor:pointer;color:#fff;font:900 15px inherit;font-family:inherit}
+#rgo.live{background:#fff;color:#ff5a5a;animation:pulse 1s infinite;transform:scale(calc(1 + var(--lv,0)))}
+#rst{min-height:2.6em;font-size:14px;margin:4px 0}
+#fmsg{font-size:13px;color:#2c9a5a;min-height:1.2em;margin:6px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <button id="call" type="button"><svg class="bb" viewBox="0 0 100 100" aria-hidden="true"><use href="#s-baby"/></svg><span><span id="callName">おなまえ</span><small>なまえを よぶよ</small></span></button>
+  <button id="qbtn" type="button"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-chick"/></svg>どれ？</button>
+  <div class="tools"><button id="fs" type="button" aria-label="ぜんがめん">⛶</button><button id="gear" type="button" aria-label="せってい">⚙</button></div>
+</header>
+<main>
+  <div id="grid"></div>
+  <p id="hint">ボタンをおすと、こえと いっしょに うごきだすよ ・ よこにしても つかえます</p>
+</main>
+<section id="quiz" aria-label="どれ？クイズ">
+  <div class="qtop"><button class="qb" id="qx" type="button" aria-label="もどる">✕</button><div id="qtext"></div><button class="qb" id="qagain" type="button" aria-label="もういちど きく">🔊</button></div>
+  <div id="qdots"></div>
+  <div id="qcards"></div>
+</section>
+<div id="fx"></div>
+
+<div class="ov" id="setup" role="dialog" aria-modal="true" aria-labelledby="st">
+  <div class="box">
+    <h2 id="st">せってい(おうちのひと)</h2>
+    <label for="nm">あかちゃんの おなまえ</label>
+    <input id="nm" type="text" placeholder="はると" maxlength="12" autocomplete="off">
+    <p>ひらがなで入れると よみまちがいが すくなくなります</p>
+    <label>よびかた</label>
+    <div class="seg">
+      <label><input type="radio" name="hon" value="ちゃん" checked><span>ちゃん</span></label>
+      <label><input type="radio" name="hon" value="くん"><span>くん</span></label>
+      <label><input type="radio" name="hon" value=""><span>なし</span></label>
+    </div>
+    <label for="vc">よみあげの こえ</label>
+    <select id="vc"></select>
+    <p>「Natural」「プレミアム」「拡張」とつく こえは より しぜんで あたたかい こえです</p>
+    <button class="btn" id="files" type="button" style="width:100%">AIおんせい・ろくおんファイルに さしかえる ›</button>
+    <label for="sens">おへんじの ききとり</label>
+    <select id="sens"><option value="0.035">びんかん(ちいさな こえでも)</option><option value="0.06" selected>ふつう</option><option value="0.1">にぶめ(さわがしい へや)</option></select>
+    <label>どれ？クイズで わかった ことば</label>
+    <div id="qstat"></div>
+    <label class="chk"><input type="checkbox" id="se" checked>こうかおん(ぽん♪)を ならす</label>
+    <div class="row"><button class="btn" id="test" type="button">おとの テスト</button><button class="btn pri" id="save" type="button">はじめる</button></div>
+  </div>
+</div>
+
+<div class="ov" id="fpanel" role="dialog" aria-modal="true" aria-labelledby="ft">
+  <div class="box">
+    <h2 id="ft">こえファイルの さしかえ</h2>
+    <p>VOICEVOXなどで つくった AIおんせいや、ママ・パパの ろくおん(mp3・m4a・wav)を ことばごとに つかえます。1つずつの ファイルなら、なまえを「01.mp3」〜「30.mp3」(ボタンよう)、「q01.mp3」〜「q30.mp3」(クイズよう)、「なまえ.mp3」「ほめる.mp3」にして まとめて えらぶと じどうで わりあてます。</p>
+    <button class="btn pri" id="recopen" type="button" style="width:100%;margin-bottom:8px">🎙 アプリで ろくおんする</button>
+    <label class="btn" style="display:grid;place-items:center;margin:0">ファイルを まとめて えらぶ<input type="file" id="bulk" accept="audio/*" multiple hidden></label>
+    <label>1つの ファイルに まとめて はいっている ばあい</label>
+    <p style="margin:0 0 8px">むおんの ところで じどうで くぎって、ボタンの じゅんばん(ワンワン→ニャンニャン→…)に わりあてます。なまえファイルは 1つめ=よびかけ、2つめいこう=ほめことば。</p>
+    <details style="margin:0 0 10px"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">ろくおんの だいほん(この じゅんに よんでね)</summary>
+    <p style="margin:6px 0 4px">ことばの あいだは 1びょう くらい あけてね</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;font-size:14px;line-height:1.75"><div><b>ボタンよう</b><ol id="scriptW" style="margin:4px 0;padding-left:1.6em"></ol></div><div><b>クイズよう</b><ol id="scriptQ" style="margin:4px 0;padding-left:1.6em"></ol></div></div>
+    <p style="margin:4px 0"><b>なまえ</b>: ①「なまえ〜？」 ②「はーい！じょうずに おへんじ できたね」</p></details>
+    <div class="row" style="margin-top:0"><label class="btn" style="display:grid;place-items:center;margin:0">ボタンよう(2ご)<input type="file" id="mwords" accept="audio/*,.mp3,.m4a,.wav" hidden></label><label class="btn" style="display:grid;place-items:center;margin:0">クイズよう(ことば)<input type="file" id="mquiz" accept="audio/*,.mp3,.m4a,.wav" hidden></label><label class="btn" style="display:grid;place-items:center;margin:0">なまえ・ほめ<input type="file" id="mname" accept="audio/*,.mp3,.m4a,.wav" hidden></label></div>
+    <select id="gap" style="margin-top:8px" aria-label="くぎりの ながさ"><option value="0.18">くぎり:みじかめ(ことばが くっつく とき)</option><option value="0.35" selected>くぎり:ふつう</option><option value="0.6">くぎり:ながめ(ことばが われる とき)</option></select>
+    <div id="fmsg"></div>
+    <label>バックアップ(ホームがめん・べつの きかいへ うつす)</label>
+    <p style="margin:0 0 8px">Safariと ホームがめんの アプリは ほぞんばしょが べつです。「ほぞん」で こえと せっていを 1つの ファイルに して、うつしたい ほうで「もどす」を えらんでね。</p>
+    <div class="row" style="margin-top:0"><button class="btn" id="bkout" type="button">ほぞん(かきだす)</button><label class="btn" style="display:grid;place-items:center;margin:0">もどす<input type="file" id="bkin" accept=".json,application/json" hidden></label></div>
+    <div class="fl" id="flist"></div>
+    <div class="row"><button class="btn" id="fclose" type="button">とじる</button></div>
+  </div>
+</div>
+
+<div class="ov" id="rec" role="dialog" aria-modal="true" aria-labelledby="rtxt">
+  <div class="box">
+    <div class="rtabs" id="rtabs"><button type="button" data-g="w">ボタンよう</button><button type="button" data-g="q">クイズよう</button><button type="button" data-g="n">なまえ</button></div>
+    <div id="rcount"></div>
+    <svg id="rpic" viewBox="0 0 100 100" aria-hidden="true"><use href="#s-baby"/></svg>
+    <div id="rtxt"></div>
+    <button id="rgo" type="button">ろくおん</button>
+    <div id="rst">あかい ボタンを おして よんでね。しずかに なると じどうで とまります</div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="rprev" type="button">← まえ</button><button class="btn" id="rplay" type="button">▶ きく</button><button class="btn" id="rnext" type="button">つぎ →</button></div>
+    <label class="btn" id="rfile" style="display:none;place-items:center;margin-top:10px">ファイルから えらぶ<input type="file" accept="audio/*" hidden></label>
+    <div class="row"><button class="btn pri" id="rclose" type="button">おわる</button></div>
+  </div>
+</div>
+<div class="ov" id="listen" role="dialog" aria-modal="true" aria-labelledby="lname">
+  <div class="box">
+    <div id="lname"></div>
+    <div class="mic wait" id="mic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#s-mic"/></svg></div>
+    <div>おへんじ してね</div>
+    <button class="btn pri" id="hai" type="button">はーい！</button>
+    <p id="mnote"></p>
+    <div class="row"><button class="btn" id="lclose" type="button">やめる</button></div>
+  </div>
+</div>
+
+<script>
+// オリジナルイラスト(SVG symbol)。左向きのキャラクターが右から左へ歩く
+const E=(x,y,r=4)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#3a2a20" stroke="none"/><circle cx="${x-r*.32}" cy="${y-r*.38}" r="${r*.36}" fill="#fff" stroke="none"/>`;
+const C=(x,y)=>`<ellipse cx="${x}" cy="${y}" rx="5" ry="3.2" fill="#ff9db0" stroke="none" opacity=".8"/>`;
+const M=(x,y,w=6)=>`<path d="M${x-w/2} ${y} q${w/2} ${w*.65} ${w} 0" fill="none"/>`;
+const pt=(cx,cy,r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)].map(v=>v.toFixed(1)).join(' ');
+const star=(cx,cy,R,r)=>{let d='';for(let i=0;i<10;i++){d+=(i?'L':'M')+pt(cx,cy,i%2?r:R,-Math.PI/2+i*Math.PI/5)}return d+'Z'};
+const legs=(xs,y,h,c)=>xs.map(x=>`<rect x="${x}" y="${y}" width="10" height="${h}" rx="5" fill="${c}"/>`).join('');
+const ART={
+dog:`<path d="M80 58 q18 -6 12 -26 q-8 4 -8 16z" fill="#f5c48a"/>${legs([42,54,66,76],68,20,'#f5c48a')}<ellipse cx="60" cy="63" rx="27" ry="17" fill="#f5c48a"/><ellipse cx="68" cy="57" rx="9" ry="6" fill="#c98b55" stroke="none"/><circle cx="34" cy="42" r="21" fill="#f5c48a"/><path d="M44 24 q16 -2 12 22 q-10 0 -12 -22z" fill="#b9784a"/><path d="M22 25 q-14 2 -11 22 q9 0 11 -22z" fill="#b9784a"/><ellipse cx="26" cy="51" rx="12" ry="8" fill="#fff4e3"/><ellipse cx="18" cy="48" rx="4.5" ry="3.4" fill="#3a2a20"/><path d="M21 55 q4 4 8 0" fill="none"/>${E(28,38)}${E(42,38)}${C(47,49)}`,
+cat:`<path d="M82 64 q18 -6 8 -32" fill="none" stroke-width="10"/><path d="M82 64 q18 -6 8 -32" fill="none" stroke="#ffc27a" stroke-width="5"/>${legs([44,56,68,76],70,18,'#ffc27a')}<ellipse cx="62" cy="66" rx="24" ry="15" fill="#ffc27a"/><path d="M58 54 v8 M66 53 v9 M74 55 v8" fill="none" stroke="#e98a3c"/><path d="M19 40 l-3 -24 l18 12z" fill="#ffc27a"/><path d="M40 28 l14 -14 l3 24z" fill="#ffc27a"/><circle cx="36" cy="46" r="20" fill="#ffc27a"/><path d="M30 28 v6 M36 27 v7 M42 28 v6" fill="none" stroke="#e98a3c"/>${E(29,45)}${E(43,45)}<path d="M33 51 h6 l-3 3.5z" fill="#ff8fa3"/><path d="M31 57 q2.5 3 5 0 q2.5 3 5 0" fill="none"/><path d="M23 53 h-11 M23 57 l-10 3 M49 53 h11 M49 57 l10 3" fill="none" stroke-width="2"/>`,
+leaf:`<path d="M10 82 Q8 22 88 12 Q84 86 10 82z" fill="#86d16b"/><path d="M16 78 Q42 50 80 20 M40 58 l-4 -14 M56 44 l-2 -12 M48 52 l12 4 M64 38 l10 2" fill="none" stroke="#4f9a3c" stroke-width="2.5"/>`,
+flower:[0,72,144,216,288].map(a=>`<ellipse cx="50" cy="27" rx="15" ry="21" fill="#ffb7cf" transform="rotate(${a} 50 50)"/>`).join('')+`<circle cx="50" cy="50" r="11" fill="#ffe07a"/>${E(46,49,2.2)}${E(54,49,2.2)}`,
+car:`<path d="M8 66 q0 -14 14 -16 l10 -18 q3 -5 9 -5 h26 q6 0 9 5 l8 18 q12 2 12 14 v6 q0 6 -6 6 h-76 q-6 0 -6 -6z" fill="#ff7b6b"/><path d="M37 32 h12 v16 h-20z M55 32 h12 l7 16 h-19z" fill="#bfe6ff"/><circle cx="16" cy="60" r="6" fill="#fff6c2"/>${E(16,60,3)}<path d="M12 70 h12" fill="none"/>${C(28,60)}<circle cx="28" cy="80" r="10" fill="#4a4a5a"/><circle cx="28" cy="80" r="4" fill="#ddd"/><circle cx="74" cy="80" r="10" fill="#4a4a5a"/><circle cx="74" cy="80" r="4" fill="#ddd"/>`,
+train:`<rect x="8" y="24" width="84" height="52" rx="14" fill="#6bb7ff"/><rect x="9" y="60" width="82" height="6" fill="#fff" stroke="none"/><rect x="15" y="32" width="26" height="20" rx="6" fill="#e8f6ff"/>${E(23,42,3)}${E(34,42,3)}<rect x="48" y="32" width="16" height="18" rx="4" fill="#e8f6ff"/><rect x="70" y="32" width="16" height="18" rx="4" fill="#e8f6ff"/>${C(20,55)}${[26,50,74].map(x=>`<circle cx="${x}" cy="80" r="7" fill="#4a4a5a"/>`).join('')}`,
+car2:`<rect x="6" y="24" width="88" height="52" rx="10" fill="#9ccdff"/><rect x="7" y="60" width="86" height="6" fill="#fff" stroke="none"/>${[14,38,62].map(x=>`<rect x="${x}" y="32" width="18" height="18" rx="4" fill="#e8f6ff"/>`).join('')}${[24,50,76].map(x=>`<circle cx="${x}" cy="80" r="7" fill="#4a4a5a"/>`).join('')}`,
+plane:`<g transform="rotate(-16 50 56)"><path d="M46 50 l-8 -22 h11 l17 22z" fill="#5aa9ef"/><path d="M14 52 l-6 -22 h10 l14 20z" fill="#ff8a7a"/><path d="M8 56 q0 -10 14 -10 h52 q20 0 24 10 q-4 10 -24 10 h-52 q-14 0 -14 -10z" fill="#fff"/><path d="M46 58 l-12 26 h13 l19 -26z" fill="#7fc4ff"/>${[50,59,68].map(x=>`<circle cx="${x}" cy="55" r="3" fill="#bfe6ff"/>`).join('')}${E(86,53,3)}${C(84,60)}</g>`,
+banana:`<path d="M18 26 q2 50 50 54 q20 0 26 -9 q-38 2 -58 -46 q-8 -6 -18 1z" fill="#ffe15a"/><path d="M28 34 q12 32 44 38" fill="none" stroke="#e8b830" stroke-width="2.5"/><path d="M16 26 l-3 -9 l7 -1 l3 9z" fill="#8a6a3a"/>${E(46,58,3.2)}${E(58,63,3.2)}${M(54,70,6)}`,
+apple:`<path d="M50 30 q-10 -8 -24 -4 q-18 6 -16 30 q2 30 26 34 q8 2 14 -2 q6 4 14 2 q24 -4 26 -34 q2 -24 -16 -30 q-14 -4 -24 4z" fill="#ff6b6b"/><path d="M50 30 q0 -12 4 -18" fill="none"/><path d="M54 18 q14 -10 22 0 q-10 8 -22 0z" fill="#7cc96b"/><ellipse cx="27" cy="44" rx="4" ry="7" fill="#fff" stroke="none" opacity=".6"/>${E(38,55)}${E(62,55)}${M(50,64,8)}${C(31,64)}${C(69,64)}`,
+berry:`<path d="M50 92 q-36 -22 -36 -50 q0 -16 18 -16 q10 0 18 6 q8 -6 18 -6 q18 0 18 16 q0 28 -36 50z" fill="#ff5f7a"/>${[[30,40],[70,40],[26,56],[74,56],[40,74],[60,74],[50,84]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="1.8" ry="2.6" fill="#ffe9a0" stroke="none"/>`).join('')}<path d="M30 26 l10 -4 l4 -10 l6 9 l6 -9 l4 10 l10 4 l-14 6 h-12z" fill="#6cc36b"/>${E(40,52,3.6)}${E(60,52,3.6)}${M(50,61,7)}${C(33,61)}${C(67,61)}`,
+bread:`<path d="M12 56 q-4 -32 38 -34 q42 2 38 34 v24 q0 6 -6 6 h-64 q-6 0 -6 -6z" fill="#e9a85c"/><path d="M22 58 q0 -22 28 -24 q28 2 28 24 v20 h-56z" fill="#ffe2b0" stroke="none"/>${E(40,60)}${E(60,60)}${M(50,69,7)}${C(32,69)}${C(68,69)}`,
+star:`<path d="${star(50,54,44,21)}" fill="#ffd94a"/>${E(42,54,3.6)}${E(58,54,3.6)}${M(50,62,7)}${C(36,62)}${C(64,62)}`,
+moon:`<path d="M58 8 a42 42 0 1 0 32 66 a34 34 0 1 1 -32 -66z" fill="#ffe27a"/><path d="M30 46 q4 4 9 0" fill="none"/>${C(34,58)}${M(40,66,7)}`,
+sun:[0,1,2,3,4,5,6,7].map(i=>`<path d="M${pt(50,50,30,i*Math.PI/4-.28)} L${pt(50,50,46,i*Math.PI/4)} L${pt(50,50,30,i*Math.PI/4+.28)}z" fill="#ffb347"/>`).join('')+`<circle cx="50" cy="50" r="27" fill="#ffd45a"/>${E(41,47)}${E(59,47)}${M(50,58,10)}${C(35,57)}${C(65,57)}`,
+umbrella:`<path d="M50 52 v30 q0 8 -8 8 q-7 0 -7 -7" fill="none" stroke-width="4.5"/><path d="M8 54 q0 -40 42 -42 q42 2 42 42 q-7 -6 -14 0 q-7 -6 -14 0 q-7 -6 -14 0 q-7 -6 -14 0 q-7 -6 -14 0 q-7 -6 -14 0z" fill="#ff8fb8"/><path d="M50 12 q-14 14 -14 42 M50 12 q14 14 14 42" fill="none" stroke-width="2.5"/>`,
+drop:`<path d="M50 8 q30 40 30 58 a30 30 0 0 1 -60 0 q0 -18 30 -58z" fill="#7cc8ff"/><ellipse cx="38" cy="62" rx="5" ry="9" fill="#fff" stroke="none" opacity=".7"/>`,
+snowman:`<circle cx="50" cy="70" r="24" fill="#fff"/><circle cx="50" cy="36" r="18" fill="#fff"/><path d="M34 50 h32 v7 h-32z" fill="#ff6b6b"/><path d="M58 52 l6 14 h-8z" fill="#ff6b6b"/><rect x="36" y="14" width="28" height="8" rx="3" fill="#5a5a7a"/><rect x="41" y="2" width="18" height="14" rx="3" fill="#5a5a7a"/>${E(43,34,3)}${E(57,34,3)}<path d="M49 40 l-10 3 l10 2z" fill="#ff9a3c"/>${C(39,42)}${C(61,42)}<circle cx="50" cy="66" r="2.5" fill="#3a2a20" stroke="none"/><circle cx="50" cy="76" r="2.5" fill="#3a2a20" stroke="none"/>`,
+flake:`<g stroke="#8fd0ff" stroke-width="6">${[0,60,120].map(a=>`<path d="M50 10 v80 M50 22 l-9 -8 M50 22 l9 -8 M50 78 l-9 8 M50 78 l9 8" fill="none" transform="rotate(${a} 50 50)"/>`).join('')}</g>`,
+duck:`<path d="M44 82 l-4 8 h10z M62 82 l-4 8 h10z" fill="#ffa53a"/><path d="M84 58 l12 -12 l-2 18z" fill="#fff"/><ellipse cx="60" cy="64" rx="30" ry="20" fill="#fff"/><path d="M50 60 q16 -10 30 2 q-14 12 -30 -2z" fill="#eef0ff"/><circle cx="36" cy="38" r="17" fill="#fff"/><path d="M22 40 q-16 -2 -16 6 q9 7 18 2z" fill="#ffa53a"/>${E(33,34,3.6)}${C(41,45)}`,
+chick:`<path d="M42 84 v8 M58 84 v8" fill="none" stroke="#ffa53a" stroke-width="4"/><circle cx="50" cy="56" r="30" fill="#ffe35a"/><path d="M48 26 q-2 -12 8 -14 q-4 6 0 12 q-2 -8 8 -8" fill="none" stroke-width="2.5"/><path d="M62 58 q14 -2 16 10 q-12 4 -16 -10z" fill="#ffd23a"/>${E(36,50,3.8)}${E(52,50,3.8)}<path d="M38 59 l8 -2 l-3 7z" fill="#ffa53a"/>${C(30,60)}${C(58,60)}`,
+elephant:`${legs([40,52,66,78],68,22,'#a9c2e8')}<ellipse cx="60" cy="58" rx="30" ry="22" fill="#a9c2e8"/><path d="M90 56 q6 4 4 12" fill="none"/><path d="M20 48 q-12 12 -8 28 q3 6 9 3 q-1 -14 8 -22z" fill="#a9c2e8"/><circle cx="34" cy="44" r="20" fill="#a9c2e8"/><path d="M40 26 q26 -6 24 22 q-4 16 -22 8z" fill="#c6d8f3"/>${E(28,40)}${C(30,52)}`,
+rabbit:`<g transform="rotate(-12 38 30)"><ellipse cx="34" cy="20" rx="7" ry="18" fill="#fff"/><ellipse cx="34" cy="20" rx="3" ry="12" fill="#ffc0cf" stroke="none"/></g><g transform="rotate(14 48 30)"><ellipse cx="48" cy="20" rx="7" ry="18" fill="#fff"/><ellipse cx="48" cy="20" rx="3" ry="12" fill="#ffc0cf" stroke="none"/></g><circle cx="86" cy="64" r="7" fill="#fff"/><ellipse cx="64" cy="66" rx="24" ry="17" fill="#fff"/><ellipse cx="54" cy="82" rx="10" ry="5" fill="#fff"/><circle cx="38" cy="52" r="19" fill="#fff"/>${E(31,49,3.6)}${E(44,49,3.6)}<ellipse cx="36" cy="57" rx="3" ry="2.2" fill="#ff8fa3"/>${C(27,59)}${C(48,59)}`,
+frog:`<circle cx="31" cy="34" r="13" fill="#8bd46a"/><circle cx="69" cy="34" r="13" fill="#8bd46a"/><ellipse cx="50" cy="64" rx="36" ry="25" fill="#8bd46a"/><ellipse cx="50" cy="72" rx="20" ry="12" fill="#d8f5b8" stroke="none"/><circle cx="31" cy="33" r="8" fill="#fff"/><circle cx="69" cy="33" r="8" fill="#fff"/>${E(31,34,4)}${E(69,34,4)}<path d="M30 58 q20 16 40 0" fill="none"/>${C(22,58)}${C(78,58)}`,
+fish:`<path d="M10 50 q20 -32 56 -18 l24 -15 v66 l-24 -15 q-36 14 -56 -18z" fill="#ffa64d"/><path d="M44 30 q6 20 0 40" fill="none" stroke="#fff" stroke-width="5"/><path d="M44 30 q6 20 0 40" fill="none" stroke-width="1.5"/><path d="M40 70 q8 10 16 4z" fill="#ffc98a"/>${E(26,46,4.2)}<path d="M12 54 q4 2 6 0" fill="none"/>${C(28,56)}`,
+butterfly:`<path d="M50 48 q-18 -42 -40 -22 q-6 22 40 24z" fill="#ff9fd0"/><path d="M50 48 q18 -42 40 -22 q6 22 -40 24z" fill="#ff9fd0"/><path d="M50 52 q-34 2 -30 22 q14 10 30 -20z" fill="#ffd36b"/><path d="M50 52 q34 2 30 22 q-14 10 -30 -20z" fill="#ffd36b"/><circle cx="28" cy="34" r="5" fill="#fff" stroke="none"/><circle cx="72" cy="34" r="5" fill="#fff" stroke="none"/><ellipse cx="50" cy="54" rx="6" ry="20" fill="#7a5aa0"/><path d="M47 36 q-6 -14 -14 -16 M53 36 q6 -14 14 -16" fill="none" stroke-width="2.5"/>`,
+ball:[0,1,2,3,4,5].map(i=>`<path d="M50 50 L${pt(50,50,38,i*Math.PI/3)} A38 38 0 0 1 ${pt(50,50,38,(i+1)*Math.PI/3)}Z" fill="${['#ff6b6b','#fff','#ffd84a','#fff','#5ab8ff','#fff'][i]}" stroke="none"/>`).join('')+`<circle cx="50" cy="50" r="38" fill="none"/><circle cx="50" cy="50" r="7" fill="#fff"/><ellipse cx="34" cy="30" rx="6" ry="4" fill="#fff" stroke="none" opacity=".8" transform="rotate(-35 34 30)"/>`,
+balloon:`<path d="M50 78 q-7 8 0 13 q7 5 0 9" fill="none" stroke-width="2"/><ellipse cx="50" cy="40" rx="27" ry="33" fill="currentColor"/><path d="M45 72 l5 7 l5 -7z" fill="currentColor"/><ellipse cx="39" cy="27" rx="5" ry="10" fill="#fff" stroke="none" opacity=".6" transform="rotate(25 39 27)"/>`,
+bubble:`<circle cx="50" cy="50" r="38" fill="#dff3ff" fill-opacity=".35" stroke="#7cc8ff"/><path d="M28 40 q6 -14 20 -16" fill="none" stroke="#fff" stroke-width="5"/><circle cx="66" cy="66" r="4" fill="#fff" stroke="none" opacity=".8"/>`,
+cow:`${legs([44,56,68,78],68,20,'#fff')}<path d="M88 56 q6 10 2 20" fill="none"/><ellipse cx="64" cy="62" rx="27" ry="18" fill="#fff"/><ellipse cx="60" cy="56" rx="9" ry="6" fill="#3a3a3a" stroke="none"/><ellipse cx="78" cy="68" rx="6" ry="5" fill="#3a3a3a" stroke="none"/><path d="M22 28 q-4 -10 2 -14 M46 28 q4 -10 -2 -14" fill="none" stroke="#e8c34a" stroke-width="5"/><ellipse cx="14" cy="36" rx="8" ry="5" fill="#c9c0c0"/><ellipse cx="54" cy="36" rx="8" ry="5" fill="#c9c0c0"/><ellipse cx="34" cy="44" rx="19" ry="18" fill="#fff"/><ellipse cx="34" cy="56" rx="15" ry="10" fill="#ffc8d2"/><circle cx="28" cy="56" r="2.2" fill="#3a2a20" stroke="none"/><circle cx="40" cy="56" r="2.2" fill="#3a2a20" stroke="none"/>${E(27,40,3.6)}${E(41,40,3.6)}`,
+lion:[...Array(12)].map((_,i)=>`<circle cx="${pt(50,52,30,i*Math.PI/6).split(' ')[0]}" cy="${pt(50,52,30,i*Math.PI/6).split(' ')[1]}" r="13" fill="#e8913a"/>`).join('')+`<circle cx="50" cy="52" r="30" fill="#e8913a" stroke="none"/><circle cx="50" cy="54" r="25" fill="#ffd27a"/>${E(41,49)}${E(59,49)}<path d="M46 57 h8 l-4 4z" fill="#8a5a3a"/><path d="M50 61 v3 M44 65 q6 5 12 0" fill="none"/>${C(36,60)}${C(64,60)}`,
+nenne:`<circle cx="50" cy="58" r="30" fill="#ffe3cf"/><path d="M20 50 q2 -36 40 -36 q22 4 30 28 q-34 -10 -70 8z" fill="#8fb3ff"/><circle cx="90" cy="44" r="7" fill="#fff"/><path d="M34 60 q5 5 10 0 M56 60 q5 5 10 0" fill="none"/><ellipse cx="50" cy="72" rx="3" ry="2.4" fill="#e07a7a"/>${C(30,68)}${C(70,68)}`,
+zzz:`<path d="M28 30 h32 l-32 38 h32" fill="none" stroke="#7a8cff" stroke-width="8"/>`,
+clap:`<g transform="rotate(-22 40 60)"><rect x="16" y="46" width="12" height="24" rx="6" fill="#ffd2b0"/><rect x="24" y="30" width="26" height="50" rx="13" fill="#ffd2b0"/></g><g transform="rotate(22 60 60)"><rect x="72" y="46" width="12" height="24" rx="6" fill="#ffd2b0"/><rect x="50" y="30" width="26" height="50" rx="13" fill="#ffd2b0"/></g><path d="M50 6 v12 M32 10 l5 10 M68 10 l-5 10" fill="none" stroke="#ffb347" stroke-width="4"/>`,
+sparkle:`<path d="M50 6 q6 38 44 44 q-38 6 -44 44 q-6 -38 -44 -44 q38 -6 44 -44z" fill="#fff29a"/>`,
+heart:`<path d="M50 86 q-40 -26 -40 -50 q0 -18 18 -18 q14 0 22 14 q8 -14 22 -14 q18 0 18 18 q0 24 -40 50z" fill="#ff8fb3"/>`,
+rainbow:['#ff6b6b','#ffb347','#ffe15a','#7bd88f','#5ab8ff','#b08bff'].map((c,i)=>`<path d="M${6+i*6} 80 a${44-i*6} ${44-i*6} 0 0 1 ${88-i*12} 0" fill="none" stroke="${c}" stroke-width="7"/>`).join('')+`<circle cx="12" cy="80" r="10" fill="#fff"/><circle cx="22" cy="84" r="9" fill="#fff"/><circle cx="88" cy="80" r="10" fill="#fff"/><circle cx="78" cy="84" r="9" fill="#fff"/>`,
+baby:`<circle cx="18" cy="56" r="8" fill="#ffd9bf"/><circle cx="82" cy="56" r="8" fill="#ffd9bf"/><circle cx="50" cy="54" r="34" fill="#ffe3cf"/><path d="M44 22 q4 -12 14 -8 q-8 2 -6 10" fill="none" stroke-width="3"/>${E(38,52,4.5)}${E(62,52,4.5)}<path d="M42 66 q8 10 16 0z" fill="#ff8f8f"/>${C(28,64)}${C(72,64)}`,
+mic:`<path d="M24 46 q0 26 26 26 q26 0 26 -26 M50 72 v14 M36 88 h28" fill="none" stroke-width="4"/><rect x="36" y="10" width="28" height="50" rx="14" fill="#ff9d7a"/><path d="M42 26 h16 M42 34 h16 M42 42 h16" fill="none" stroke="#fff" stroke-width="2.5"/>`,
+};
+const ARTSVG=`<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">${Object.entries(ART).map(([k,v])=>`<symbol id="s-${k}" viewBox="0 0 100 100"><g stroke="#4a3426" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${v}</g></symbol>`).join('')}</svg>`;
+const ico=(k,cls='')=>`<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true"><use href="#s-${k}"/></svg>`;
+
+</script>
+<script>
+{
+document.body.insertAdjacentHTML('afterbegin',ARTSVG);
+const $=id=>document.getElementById(id);
+const R=(a,b)=>a+Math.random()*(b-a);
+const fxL=$('fx');
+const W=()=>innerWidth,H=()=>innerHeight;
+
+/* ---------- 保存 ---------- */
+let cfg={name:'',hon:'ちゃん',sens:0.06,voice:'',se:true};
+try{const s=JSON.parse(localStorage.getItem('kotoba-cfg')||'null');if(s)cfg={...cfg,...s}}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem('kotoba-cfg',JSON.stringify(cfg))}catch(e){}};
+const callText=()=>cfg.name+cfg.hon;
+
+/* ---------- 音声ファイル(IndexedDB) ---------- */
+const DB={db:null,mem:new Map(),urls:new Map(),
+  async open(){try{this.db=await new Promise((res,rej)=>{const r=indexedDB.open('kotoba',1);r.onupgradeneeded=()=>r.result.createObjectStore('v');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}catch(e){this.db=null}},
+  req(mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction('v',mode),r=fn(t.objectStore('v'));t.oncomplete=()=>res(r.result);t.onerror=()=>rej(t.error)})},
+  async load(){if(!this.db)return;try{const ks=await this.req('readonly',s=>s.getAllKeys());for(const k of ks)this.mem.set(k,await this.req('readonly',s=>s.get(k)))}catch(e){}},
+  async put(k,b){this.mem.set(k,b);this.drop(k);if(this.db)try{await this.req('readwrite',s=>s.put(b,k))}catch(e){}},
+  async del(k){this.mem.delete(k);this.drop(k);if(this.db)try{await this.req('readwrite',s=>s.delete(k))}catch(e){}},
+  drop(k){const u=this.urls.get(k);if(u){URL.revokeObjectURL(u);this.urls.delete(k)}},
+  url(k){if(!this.mem.has(k))return null;if(!this.urls.has(k))this.urls.set(k,URL.createObjectURL(this.mem.get(k)));return this.urls.get(k)}};
+
+/* ---------- 声 ---------- */
+let voices=[];
+const NICE=/Natural|Neural|Premium|Enhanced|プレミアム|拡張/i,FEM=/Nanami|Kyoko|O-ren|Haruka|Ayumi|Mizuki|Sayaka|Aoi|Female|女性|Google 日本語/i;
+function loadVoices(){
+  if(!('speechSynthesis' in window))return;
+  voices=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));
+  voices.sort((a,b)=>(NICE.test(b.name)*2+FEM.test(b.name))-(NICE.test(a.name)*2+FEM.test(a.name)));
+  const sel=$('vc');sel.innerHTML='';
+  if(!voices.length){const o=document.createElement('option');o.textContent='にほんごの こえが みつかりません';sel.appendChild(o);return}
+  voices.forEach((v,i)=>{const o=document.createElement('option');o.value=v.name;o.textContent=(i===0?'★おすすめ ':'')+v.name;sel.appendChild(o)});
+  sel.value=voices.some(v=>v.name===cfg.voice)?cfg.voice:voices[0].name;
+}
+const curVoice=()=>voices.find(v=>v.name===cfg.voice)||voices[0]||null;
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+let curAudio=null;
+function stopAll(){try{speechSynthesis.cancel()}catch(e){}if(curAudio){curAudio.pause();curAudio=null}}
+function speak(text,{pitch=1.25,rate=.8}={}){
+  return new Promise(res=>{
+    if(!('speechSynthesis' in window))return res();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ja-JP';const v=curVoice();if(v)u.voice=v;u.pitch=pitch;u.rate=rate;u.volume=1;
+    let done=false;const fin=()=>{if(!done){done=true;res()}};
+    u.onend=fin;u.onerror=fin;setTimeout(fin,800+text.length*380);
+    speechSynthesis.speak(u);
+  });
+}
+function say(key,text,opt){
+  stopAll();
+  const u=DB.url(key);
+  if(!u)return speak(text,opt);
+  return new Promise(res=>{const a=new Audio(u);curAudio=a;let d=false;const f=()=>{if(!d){d=true;res()}};
+    a.onended=f;a.onerror=()=>speak(text,opt).then(f);a.play().catch(()=>speak(text,opt).then(f));setTimeout(f,12000)});
+}
+
+/* ---------- 効果音(音声データとして再生 → ミラーリングでもテレビから鳴る) ---------- */
+function wav(notes,dur){const sr=22050,n=Math.floor(sr*dur),buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+  ws(0,'RIFF');dv.setUint32(4,36+n*2,true);ws(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){const t=i/sr;let v=0;for(const[f0,f1,st,len]of notes){const lt=t-st;if(lt<0||lt>len)continue;const f=f0+(f1-f0)*Math.min(lt/len,1),env=Math.min(lt/.01,1)*Math.exp(-lt*6/len);v+=Math.sin(2*Math.PI*f*lt)*env*.45+Math.sin(4*Math.PI*f*lt)*env*.08}
+    dv.setInt16(44+i*2,Math.max(-1,Math.min(1,v))*30000,true)}
+  return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}))}
+const SFX={pon:wav([[520,900,0,.22]],.3),hop:wav([[400,1200,0,.18],[600,1400,.16,.18]],.4),
+  yay:wav([[523,523,0,.3],[659,659,.14,.3],[784,784,.28,.3],[1047,1047,.42,.6],[784,784,.42,.6]],1.1)};
+function sfx(k){if(!cfg.se)return;try{const a=new Audio(SFX[k]);a.volume=.55;a.play().catch(()=>{})}catch(e){}}
+
+/* ---------- ギミック ---------- */
+function el(k,size,color){const d=document.createElement('div');d.className='fx';d.style.width=d.style.height=size+'px';if(color)d.style.color=color;d.innerHTML=ico(k);fxL.appendChild(d);return d}
+function run(s,frames,opt){const a=s.animate(frames,{fill:'both',...opt});a.onfinish=()=>s.remove();return a}
+const tf=(x,y,r=0,sc=1)=>({transform:`translate(${x}px,${y}px) rotate(${r}deg) scale(${sc})`});
+const S=()=>Math.min(W(),H()*1.4)/400; // 画面サイズに合わせて拡大(テレビ対策)
+const BAL=['#ff6b6b','#ffb347','#ffd84a','#7bd88f','#5ab8ff','#c58bff','#ff8fc7'];
+
+function fall(k,n=18,[a,b]=[32,60]){for(let i=0;i<n;i++){const z=R(a,b)*S(),s=el(k,z),x=R(-20,W());
+  run(s,[tf(x,-z-20),tf(x+R(-80,80),H()*.5,R(-180,180)),tf(x+R(-120,120),H()+20,R(-360,360))],{duration:R(2600,4600),delay:R(0,1400),easing:'ease-in'})}}
+function rise(k,n=12,[a,b]=[44,84],colors){for(let i=0;i<n;i++){const z=R(a,b)*S(),s=el(k,z,colors&&colors[i%colors.length]),x=R(0,W()-z);
+  run(s,[tf(x,H()+20),tf(x+R(-60,60),H()*.5,R(-15,15)),tf(x+R(-60,60),-z-40,R(-20,20))],{duration:R(3200,5200),delay:R(0,1200),easing:'ease-out'})}}
+function walk(k,{size=130,dur=4200,bob=12,hop=0,steps=16,yOff=24}={}){
+  size*=S();const s=el(k,size),base=H()-size-yOff*S(),fr=[];
+  for(let i=0;i<=40;i++){const t=i/40,x=W()+size-(W()+size*2.5)*t;
+    const y=hop?base-Math.abs(Math.sin(t*Math.PI*5))*hop*S():base-Math.abs(Math.sin(t*Math.PI*steps))*bob*S();
+    fr.push(tf(x,y,hop?0:Math.sin(t*Math.PI*steps)*4))}
+  run(s,fr,{duration:dur,easing:'linear'})}
+function swim(k,n=3){for(let j=0;j<n;j++){const z=R(80,120)*S(),s=el(k,z),base=R(H()*.2,H()*.65),fr=[];
+  for(let i=0;i<=40;i++){const t=i/40;fr.push(tf(W()+z-(W()+z*2.5)*t,base+Math.sin(t*Math.PI*4)*40*S(),Math.cos(t*Math.PI*4)*12))}
+  run(s,fr,{duration:R(3800,5200),delay:j*500,easing:'linear'})}}
+function fly(k,{size=120,dur=3200,rtl=false,wave=0}={}){size*=S();const s=el(k,size),fr=[];
+  for(let i=0;i<=30;i++){const t=i/30;const x=rtl?W()+size-(W()+size*2.5)*t:-size*1.5+(W()+size*2.5)*t;
+    const y=rtl?H()*.3+Math.sin(t*Math.PI*6)*wave*S():H()*.75-H()*.65*t+Math.sin(t*Math.PI*2)*30;fr.push(tf(x,y))}
+  run(s,fr,{duration:dur,easing:'ease-in-out'})}
+function burst(k,n=12,cx=W()/2,cy=H()/2,dist=180){dist*=S();for(let i=0;i<n;i++){const a=i/n*Math.PI*2+R(-.2,.2),d=R(dist*.6,dist),z=R(26,44)*S(),s=el(k,z),o=z/2;
+  run(s,[{...tf(cx-o,cy-o,0,.2),opacity:1},{...tf(cx-o+Math.cos(a)*d,cy-o+Math.sin(a)*d,R(-90,90),1.1),opacity:1,offset:.7},{...tf(cx-o+Math.cos(a)*d*1.1,cy-o+Math.sin(a)*d*1.1+30,0,.8),opacity:0}],{duration:1400,easing:'ease-out'})}}
+function pop(k,{size=200,spin=false,spark='sparkle'}={}){size*=S();const s=el(k,size),x=W()/2-size/2,y=H()/2-size/2-20;
+  run(s,[{...tf(x,y,0,0),opacity:1},{...tf(x,y,spin?180:-8,1.25),offset:.25},{...tf(x,y,spin?270:6,.92),offset:.4},{...tf(x,y,spin?330:0,1.05),offset:.55},{...tf(x,y,spin?360:0,1),opacity:1,offset:.85},{...tf(x,y,spin?400:0,1.3),opacity:0}],{duration:2400,easing:'ease-out'});
+  setTimeout(()=>burst(spark,12,W()/2,H()/2-20,size/S()*1.1),350)}
+function twinkle(k,n=16){for(let i=0;i<n;i++){const z=R(32,66)*S(),s=el(k,z),x=R(10,W()-z),y=R(10,H()*.6);
+  run(s,[{...tf(x,y,0,0),opacity:0},{...tf(x,y,20,1.2),opacity:1,offset:.3},{...tf(x,y,-10,.9),opacity:1,offset:.7},{...tf(x,y,0,0),opacity:0}],{duration:R(1600,2600),delay:R(0,1200)})}}
+function bounce(k,size=110){size*=S();const s=el(k,size),fr=[],floor=H()-size-24;
+  for(let i=0;i<=60;i++){const t=i/60,x=-size+(W()+size*2)*t,amp=(1-t)*(H()*.6),ph=(t*3.5)%1;fr.push(tf(x,floor-amp*4*ph*(1-ph),t*720))}
+  run(s,fr,{duration:3600,easing:'linear'})}
+function confetti(n=90){for(let i=0;i<n;i++){const c=document.createElement('i');c.className='cf';c.style.background=BAL[i%BAL.length];fxL.appendChild(c);const x=R(0,W());
+  run(c,[tf(x,-30,0),tf(x+R(-100,100),H()*.5,R(-360,360)),tf(x+R(-150,150),H()+40,R(-720,720))],{duration:R(2400,4200),delay:R(0,900),easing:'ease-in'})}}
+function bigText(t,y=.16,dur=3600){const d=document.createElement('div');d.className='big';d.textContent=t;d.style.top=(H()*y)+'px';fxL.appendChild(d);
+  run(d,[{transform:'scale(0)',opacity:0},{transform:'scale(1.15)',opacity:1,offset:.15},{transform:'scale(1)',opacity:1,offset:.25},{transform:'scale(1)',opacity:1,offset:.85},{transform:'scale(1.1)',opacity:0}],{duration:dur})}
+function celebrate(){sfx('yay');confetti();bigText(callText()+' じょうず！');setTimeout(()=>rise('balloon',12,[50,90],BAL),300);setTimeout(()=>pop('rainbow',{size:240,spark:'star'}),500);
+  setTimeout(()=>{burst('star',14,W()*.25,H()*.4,140);burst('heart',12,W()*.75,H()*.45,140)},1300);
+  setTimeout(()=>walk('dog',{size:100,dur:3400,yOff:16}),1800);setTimeout(()=>walk('cat',{size:90,dur:3600,yOff:24}),2300);setTimeout(()=>walk('chick',{size:60,dur:3800,yOff:20,bob:16,steps:24}),2700)}
+
+/* ---------- ことば30こ [ひょうじ, よみ, イラスト, ギミック, 声の調子] ---------- */
+const soft={pitch:1.1,rate:.62},low={pitch:.95,rate:.75},happy={pitch:1.35,rate:.82};
+const WORDS=[
+ ['ワンワン','わんわん！','dog',()=>walk('dog',{bob:16}),happy],
+ ['ニャンニャン','にゃんにゃん','cat',()=>walk('cat',{bob:10,dur:5000})],
+ ['ハッパ','はっぱ','leaf',()=>fall('leaf',22)],
+ ['おはな','おはな','flower',()=>fall('flower',20)],
+ ['ブーブー','ぶーぶー！','car',()=>walk('car',{bob:4,steps:30,dur:2600}),happy],
+ ['でんしゃ','でんしゃ','train',()=>{for(let i=0;i<4;i++)setTimeout(()=>walk(i?'car2':'train',{bob:3,steps:40,dur:3600,size:120}),i*360*S()*.9)}],
+ ['ひこうき','ひこうき','plane',()=>fly('plane')],
+ ['バナナ','ばなな','banana',()=>pop('banana')],
+ ['りんご','りんご','apple',()=>fall('apple',10,[46,72])],
+ ['いちご','いちご','berry',()=>pop('berry',{spark:'berry'})],
+ ['パン','ぱん','bread',()=>pop('bread')],
+ ['おほしさま','おほしさま','star',()=>twinkle('star',18),soft],
+ ['おつきさま','おつきさま','moon',()=>{pop('moon');twinkle('sparkle',10)},soft],
+ ['おひさま','おひさま','sun',()=>pop('sun',{spin:true,size:220}),happy],
+ ['あめ','あめ','umbrella',()=>{fall('drop',34,[18,34]);pop('umbrella',{size:160,spark:'drop'})}],
+ ['ゆき','ゆき','snowman',()=>{fall('flake',30,[22,46]);setTimeout(()=>pop('snowman',{size:170,spark:'flake'}),800)}],
+ ['ガーガー','がーがー','duck',()=>{walk('duck',{size:110,bob:10,steps:20});setTimeout(()=>walk('chick',{size:60,bob:10,steps:26,dur:4000}),500);setTimeout(()=>walk('chick',{size:54,bob:10,steps:28,dur:4100}),900)}],
+ ['ぞうさん','ぞうさん','elephant',()=>walk('elephant',{size:180,dur:6500,bob:8,steps:10}),low],
+ ['ピョンピョン','ぴょんぴょん！','rabbit',()=>walk('rabbit',{size:105,hop:180,dur:4500}),happy],
+ ['ケロケロ','けろけろ','frog',()=>walk('frog',{size:95,hop:220,dur:4000})],
+ ['おさかな','おさかな','fish',()=>swim('fish',4)],
+ ['ちょうちょ','ちょうちょ','butterfly',()=>{for(let i=0;i<3;i++)setTimeout(()=>fly('butterfly',{size:76,rtl:true,wave:90,dur:4600}),i*600)}],
+ ['ピヨピヨ','ぴよぴよ','chick',()=>{for(let i=0;i<3;i++)setTimeout(()=>walk('chick',{size:70,bob:18,steps:26,dur:3800}),i*420)},happy],
+ ['ボール','ぼーる','ball',()=>bounce('ball')],
+ ['ふうせん','ふうせん','balloon',()=>rise('balloon',14,[44,84],BAL)],
+ ['シャボンだま','しゃぼんだま','bubble',()=>rise('bubble',20,[30,72])],
+ ['モーモー','もーもー','cow',()=>walk('cow',{size:150,dur:6000,bob:6,steps:10}),low],
+ ['ガオー','がおー！','lion',()=>pop('lion',{size:220,spark:'star'}),low],
+ ['ねんね','ねんね','nenne',()=>{pop('nenne',{size:160,spark:'star'});rise('zzz',8,[30,50])},soft],
+ ['パチパチ','ぱちぱち！','clap',()=>{pop('clap');confetti(50)},happy],
+];
+const PHR=['わんわん きたよ','にゃんにゃん いたね','はっぱ ひらひら','おはな きれいね','ぶーぶー はしるね','でんしゃ がたんごとん','ひこうき とんでるね','ばなな おいしいね','りんご ころころ','いちご あかいね','ぱん もぐもぐ','おほしさま きらきら','おつきさま まるいね','おひさま ぽかぽか','あめ ざーざー','ゆき ふってきたね','がーがー あひるさん','ぞうさん おおきいね','ぴょんぴょん うさぎさん','けろけろ かえるさん','おさかな すいすい','ちょうちょ ひらひら','ぴよぴよ ひよこさん','ぼーる ぽーん','ふうせん ふわふわ','しゃぼんだま ふわー','もーもー うしさん','がおー らいおんさん','ねんね しようね','ぱちぱち じょうずね'];
+const PAL=['#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#bdb2ff','#ffc6ff','#ffadad','#d0f4de'];
+const grid=$('grid');
+grid.innerHTML=WORDS.map((w,i)=>`<button class="w" type="button" data-i="${i}" style="background:${PAL[i%PAL.length]}">${ico(w[2])}<span>${w[0]}</span></button>`).join('');
+let last=0;
+grid.addEventListener('click',ev=>{const b=ev.target.closest('.w');if(!b)return;
+  const now=Date.now();if(now-last<350)return;last=now;
+  if(fxL.childElementCount>260)return;
+  const i=+b.dataset.i,w=WORDS[i];b.classList.add('hit');setTimeout(()=>b.classList.remove('hit'),150);
+  sfx(w[3].toString().includes('hop')?'hop':'pon');setTimeout(()=>say('w'+i,PHR[i],w[4]),120);w[3]();keepAwake();});
+
+/* ---------- どれ？クイズ(1〜2さい) ---------- */
+const CATS={dog:'a',cat:'a',duck:'a',elephant:'a',rabbit:'a',frog:'a',fish:'a',butterfly:'a',chick:'a',cow:'a',lion:'a',
+  banana:'f',apple:'f',berry:'f',bread:'f',car:'v',train:'v',plane:'v',leaf:'n',flower:'n',star:'n',moon:'n',sun:'n',umbrella:'n',snowman:'n',ball:'t',balloon:'t',bubble:'t'};
+const QI=WORDS.map((w,i)=>i).filter(i=>CATS[WORDS[i][2]]);
+const plain=i=>WORDS[i][1].replace(/[！!]/g,'');
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let qs={};try{qs=JSON.parse(localStorage.getItem('kotoba-qs')||'{}')}catch(e){}
+const Q={n:2,streak:0,miss:0,done:0,t:-1,prev:-1,lock:false,timers:[]};
+const later=(f,ms)=>Q.timers.push(setTimeout(f,ms));
+function clearQ(){Q.timers.forEach(clearTimeout);Q.timers=[]}
+function pickTarget(){ // まだ あまり わかっていない ことばを おおめに
+  const pool=QI.filter(i=>i!==Q.prev),wt=pool.map(i=>1/(1+(qs[i]||0)));let r=Math.random()*wt.reduce((a,b)=>a+b,0);
+  for(let k=0;k<pool.length;k++){r-=wt[k];if(r<=0)return pool[k]}return pool[0]}
+function nextQ(){
+  clearQ();Q.lock=false;Q.miss=0;const t=pickTarget();Q.t=t;Q.prev=t;const cat=CATS[WORDS[t][2]];
+  // 2たく:ちがう なかま(わかりやすい) / 3〜4たく:おなじ なかまも まぜる
+  const other=shuf(QI.filter(i=>i!==t&&CATS[WORDS[i][2]]!==cat)),same=shuf(QI.filter(i=>i!==t&&CATS[WORDS[i][2]]===cat));
+  const ds=Q.n===2?other.slice(0,1):[...same.slice(0,1),...other].slice(0,Q.n-1);
+  const ch=shuf([t,...ds]);
+  const portrait=innerHeight>innerWidth;
+  $('qcards').style.setProperty('--c',portrait?(ch.length===4?2:1):ch.length);
+  $('qcards').innerHTML=ch.map(i=>`<button class="qc" type="button" data-i="${i}">${ico(WORDS[i][2])}<span>${WORDS[i][0]}</span></button>`).join('');
+  $('qtext').textContent=WORDS[t][0]+' どれ？';
+  later(ask,400);
+}
+const word=(i,o=happy)=>say('q'+i,plain(i),o); // クイズようの「ことばだけ」
+function ask(){const t=Q.t;stopAll();
+  if(DB.mem.has('q'+t))word(t).then(()=>{if(Q.t===t)speak('どれかな？',happy)});
+  else speak(plain(t)+'、どれかな？',happy)}
+function dots(){$('qdots').innerHTML=[0,1,2,3,4].map(k=>`<span class="dot${k<Q.done%5||(Q.done&&Q.done%5===0&&Q.lock)?' on':''}"></span>`).join('')}
+$('qcards').addEventListener('click',e=>{const c=e.target.closest('.qc');if(!c||Q.lock)return;const i=+c.dataset.i,t=Q.t;keepAwake();
+  if(i===t){
+    Q.lock=true;clearQ();c.classList.remove('hint');c.classList.add('ok','show');sfx('pon');
+    qs[t]=(qs[t]||0)+(Q.miss?0:1);try{localStorage.setItem('kotoba-qs',JSON.stringify(qs))}catch(e){}
+    if(Q.miss===0){Q.streak++;if(Q.streak>=3&&Q.n<4){Q.n++;Q.streak=0}}else{Q.streak=0;if(Q.miss>=2&&Q.n>2)Q.n--}
+    Q.done++;dots();
+    stopAll();(DB.mem.has('q'+t)?speak('そう！',{pitch:1.4,rate:.85}).then(()=>word(t)):speak('そう！ '+plain(t)+'！',{pitch:1.4,rate:.85}));WORDS[t][3]();
+    if(Q.done%5===0)later(()=>{sfx('yay');confetti();bigText('ぜんぶ できたね！',.3,3200);speak('ぜんぶ できたね！ すごい！',happy);later(()=>{dots();nextQ()},3800)},2200);
+    else later(nextQ,3200);
+  }else{ // まちがえても しからない:おしえて もういちど
+    Q.miss++;c.classList.remove('no');void c.offsetWidth;c.classList.add('no','show');
+    stopAll();(DB.mem.has('q'+i)?speak('それは',soft).then(()=>word(i,soft)):speak('それは '+plain(i)+' だね',soft)).then(()=>{if(Q.t!==t||Q.lock)return;
+      const ok=$('qcards').querySelector(`[data-i="${t}"]`);if(ok)ok.classList.add('hint');
+      (DB.mem.has('q'+t)?word(t).then(()=>{if(Q.t===t&&!Q.lock)speak('こっちだよ',happy)}):speak(plain(t)+' は こっち',happy))});
+  }});
+$('qbtn').onclick=()=>{Q.done=0;Q.streak=0;dots();$('quiz').classList.add('on');keepAwake();nextQ()};
+$('qx').onclick=()=>{clearQ();stopAll();$('quiz').classList.remove('on')};
+$('qagain').onclick=()=>{if(!Q.lock)ask()};
+function renderQstat(){const ks=QI.filter(i=>qs[i]).sort((a,b)=>qs[b]-qs[a]);
+  $('qstat').textContent=ks.length?ks.map(i=>`${WORDS[i][0]}${qs[i]>=3?'◎':'○'}`).join('  '):'まだ ありません(○=わかった、◎=3かい いじょう)'}
+
+/* ---------- 全画面・スリープ防止(テレビ用) ---------- */
+let lock=null;
+async function keepAwake(){try{if(!lock&&navigator.wakeLock){lock=await navigator.wakeLock.request('screen');lock.onrelease=()=>lock=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')lock=null});
+$('fs').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else{await document.documentElement.requestFullscreen();try{await screen.orientation.lock('landscape')}catch(e){}}}catch(e){bigText('よこにして つかってね',.4,2200)}keepAwake()};
+
+/* ---------- せってい ---------- */
+const setup=$('setup');
+function openSetup(){$('nm').value=cfg.name;document.querySelectorAll('[name=hon]').forEach(r=>r.checked=r.value===cfg.hon);$('sens').value=String(cfg.sens);$('se').checked=cfg.se;renderQstat();loadVoices();setup.classList.add('on')}
+function readSetup(){cfg.name=$('nm').value.trim();cfg.hon=document.querySelector('[name=hon]:checked').value;cfg.sens=+$('sens').value;cfg.voice=$('vc').value;cfg.se=$('se').checked}
+function paint(){$('callName').textContent=cfg.name?callText()+'！':'おなまえ'}
+$('gear').onclick=openSetup;
+$('vc').onchange=()=>{cfg.voice=$('vc').value;speak('こんにちは',happy)};
+$('test').onclick=()=>{readSetup();sfx('pon');setTimeout(()=>speak(cfg.name?callText()+'、こんにちは':'こんにちは',happy),200)};
+$('save').onclick=()=>{readSetup();if(!cfg.name){$('nm').focus();return}saveCfg();paint();setup.classList.remove('on');say('name',callText()+'、あそぼう',happy)};
+$('nm').addEventListener('keydown',e=>{if(e.key==='Enter')$('save').click()});
+
+/* ---------- 音声ファイル さしかえ ---------- */
+const FK=[{k:'name',l:'おなまえ よびかけ',m:['なまえ','name','00']},{k:'yay',l:'ほめことば',m:['ほめる','ほめことば','yay','31']},
+  ...WORDS.map((w,i)=>({k:'w'+i,g:'w',l:PHR[i],m:[w[0],w[1].replace(/[！!]/g,''),PHR[i],String(i+1),String(i+1).padStart(2,'0')]})),
+  ...WORDS.map((w,i)=>({k:'q'+i,g:'q',l:w[0],m:['q'+(i+1),'q'+String(i+1).padStart(2,'0'),'くいず_'+w[1].replace(/[！!]/g,''),'クイズ_'+w[0]]}))];
+FK[0].g=FK[1].g='n';
+const GL={n:'おなまえ・ほめことば',w:'ボタンよう(2ご)',q:'クイズよう(ことばだけ)'};
+const norm=s=>s.normalize('NFKC').toLowerCase().replace(/\.[^.]+$/,'').trim();
+function renderFiles(){$('flist').innerHTML=FK.map((f,j)=>(j===0||FK[j-1].g!==f.g?`<label style="margin-top:14px">${GL[f.g]} ${FK.filter(x=>x.g===f.g&&DB.mem.has(x.k)).length}/${FK.filter(x=>x.g===f.g).length}</label>`:'')+`<div class="fr"><b>${f.l}${DB.mem.has(f.k)?'<i>✓ファイル</i>':''}</b><button class="sm" data-r="${f.k}" type="button" aria-label="ろくおん">🎙</button><button class="sm" data-p="${f.k}" type="button" aria-label="きく">▶</button><label class="sm">えらぶ<input type="file" accept="audio/*" data-f="${f.k}"></label><button class="sm" data-d="${f.k}" type="button" aria-label="けす" ${DB.mem.has(f.k)?'':'disabled'}>×</button></div>`).join('')}
+$('files').onclick=()=>{renderFiles();$('fmsg').textContent='';$('fpanel').classList.add('on')};
+$('fclose').onclick=()=>$('fpanel').classList.remove('on');
+$('flist').addEventListener('click',e=>{const p=e.target.closest('[data-p]'),d=e.target.closest('[data-d]'),r=e.target.closest('[data-r]');
+  if(r){const f=FK.find(x=>x.k===r.dataset.r);openRec(f.g,FK.filter(x=>x.g===f.g).indexOf(f))}
+  if(p){const k=p.dataset.p,f=FK.find(x=>x.k===k);const n=+k.slice(1),w=/^[wq]/.test(k)?WORDS[n]:null;say(k,k==='name'?callText()+'〜？':k==='yay'?'はーい！じょうずに おへんじ できたね':k[0]==='w'?PHR[n]:plain(n),w?w[4]:happy)}
+  if(d){DB.del(d.dataset.d).then(renderFiles)}});
+$('flist').addEventListener('change',async e=>{const i=e.target.closest('[data-f]');if(!i||!i.files[0])return;await DB.put(i.dataset.f,i.files[0]);renderFiles();$('fmsg').textContent='さしかえました'});
+$('bulk').onchange=async e=>{let n=0;for(const file of e.target.files){const b=norm(file.name),f=FK.find(x=>x.m.some(m=>norm(m)===b));if(f){await DB.put(f.k,file);n++}}
+  renderFiles();$('fmsg').textContent=`${e.target.files.length}こ中 ${n}こを わりあてました`;e.target.value=''};
+
+/* ---------- まとめファイルを むおんで くぎる ---------- */
+function toWav(d,sr){const n=d.length,buf=new ArrayBuffer(44+n*2),dv=new DataView(buf),ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+  ws(0,'RIFF');dv.setUint32(4,36+n*2,true);ws(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.max(-1,Math.min(1,d[i]))*32767,true);return new Blob([buf],{type:'audio/wav'})}
+async function splitAudio(file,minGap){
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const ab=await file.arrayBuffer();const au=await new Promise((res,rej)=>actx.decodeAudioData(ab,res,rej));
+  const sr=au.sampleRate,len=au.length,mono=new Float32Array(len);
+  for(let c=0;c<au.numberOfChannels;c++){const ch=au.getChannelData(c);for(let i=0;i<len;i++)mono[i]+=ch[i]/au.numberOfChannels}
+  const fr=Math.round(sr*.02),nf=Math.floor(len/fr),rms=new Float32Array(nf);let peak=0;
+  for(let f=0;f<nf;f++){let s=0;for(let i=f*fr;i<(f+1)*fr;i++)s+=mono[i]*mono[i];rms[f]=Math.sqrt(s/fr);if(rms[f]>peak)peak=rms[f]}
+  const th=Math.max(peak*.07,.002),gap=Math.round(minGap/.02),segs=[];let st=-1,lastOn=-1;
+  for(let f=0;f<nf;f++){if(rms[f]>th){if(st<0)st=f;lastOn=f}else if(st>=0&&f-lastOn>gap){segs.push([st,lastOn]);st=-1}}
+  if(st>=0)segs.push([st,lastOn]);
+  const pad=Math.round(.08/.02);
+  const rg=segs.filter(([a,b])=>(b-a+1)*.02>=.12).map(([a,b])=>[Math.max(0,(a-pad)*fr),Math.min(len,(b+1+pad)*fr)]);
+  const clips=rg.map(([s,e])=>toWav(mono.slice(s,e),sr));
+  clips.rest=rg.length>1?toWav(mono.slice(rg[1][0],rg[rg.length-1][1]),sr):null; // 2つめ〜さいごを ひとつに
+  return clips;
+}
+async function handleMerged(input,kind){const file=input.files[0];input.value='';if(!file)return;
+  const msg=$('fmsg');msg.textContent='くぎっています…';
+  try{const segs=await splitAudio(file,+$('gap').value);
+    if(!segs.length){msg.textContent='こえが みつかりませんでした';return}
+    if(kind==='w'||kind==='q'){const n=Math.min(segs.length,WORDS.length);for(let i=0;i<n;i++)await DB.put(kind+i,segs[i]);
+      msg.textContent=segs.length===WORDS.length?`30こ みつかり、ぜんぶ わりあてました。▶で たしかめてね`:
+        `${segs.length}こ みつかりました(30こ ひつよう)。はじめの ${n}こを じゅんに わりあてました。ずれる ときは「くぎり」を かえて もういちど えらんでね`}
+    else{await DB.put('name',segs[0]);if(segs.rest)await DB.put('yay',segs.rest);
+      msg.textContent=`${segs.length}こ みつかりました。1つめを よびかけ${segs.length>1?'、のこりを ほめことば':''}に しました`}
+    renderFiles();
+  }catch(e){msg.textContent='このファイルは よみこめませんでした(mp3・m4a・wav を ためしてね)'}}
+/* ---------- バックアップ ---------- */
+const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(b)});
+$('bkout').onclick=async()=>{const msg=$('fmsg');msg.textContent='ファイルを つくっています…';
+  try{const data={app:'kotoba',v:1,cfg,qs,audio:{}};for(const[k,b]of DB.mem)data.audio[k]={t:b.type||'audio/wav',d:await b64(b)};
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json'}),name='kotoba-backup.json';
+    const file=new File([blob],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file]});msg.textContent='ほぞんしました(「"ファイル"に保存」が おすすめ)';return}catch(e){if(e.name==='AbortError'){msg.textContent='';return}}}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    msg.textContent=`ほぞんしました(こえ ${DB.mem.size}こ)`;
+  }catch(e){msg.textContent='ほぞんできませんでした'}};
+$('bkin').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const msg=$('fmsg');
+  try{const data=JSON.parse(await f.text());if(data.app!=='kotoba')throw 0;let n=0;
+    for(const[k,v]of Object.entries(data.audio||{})){if(!/^(name|yay|[wq]\d{1,2})$/.test(k))continue;const bin=atob(v.d),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);await DB.put(k,new Blob([u],{type:String(v.t||'audio/wav')}));n++}
+    if(data.cfg){cfg={...cfg,...data.cfg};saveCfg();paint()}
+    if(data.qs){qs=data.qs;try{localStorage.setItem('kotoba-qs',JSON.stringify(qs))}catch(e){}}
+    renderFiles();msg.textContent=`もどしました(こえ ${n}こ・せってい)`;
+  }catch(err){msg.textContent='この ファイルは よみこめませんでした'}};
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* ---------- アプリで ろくおん ---------- */
+async function trimAudio(blob){ // まえと うしろの むおんを けずる
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const au=await new Promise(async(res,rej)=>actx.decodeAudioData(await blob.arrayBuffer(),res,rej));
+  const sr=au.sampleRate,d=au.getChannelData(0),fr=Math.round(sr*.02),nf=Math.floor(d.length/fr),rm=[];let pk=0;
+  for(let f=0;f<nf;f++){let s=0;for(let i=f*fr;i<(f+1)*fr;i++)s+=d[i]*d[i];rm.push(Math.sqrt(s/fr));pk=Math.max(pk,rm[f])}
+  const th=Math.max(pk*.08,.003);let a=rm.findIndex(v=>v>th),b=nf-1-[...rm].reverse().findIndex(v=>v>th);
+  if(a<0)return null;a=Math.max(0,a-5);b=Math.min(nf,b+8);
+  let out=d.slice(a*fr,b*fr),osr=sr;
+  if(sr>=44100){const k=Math.floor(sr/22050),o=new Float32Array(Math.floor(out.length/k));for(let i=0;i<o.length;i++){let s=0;for(let j=0;j<k;j++)s+=out[i*k+j];o[i]=s/k}out=o;osr=sr/k} // かるく するlet mx=0;for(const v of out)mx=Math.max(mx,Math.abs(v));const g=mx>0?Math.min(.9/mx,4):1;for(let i=0;i<out.length;i++)out[i]*=g; // おおきさを そろえる
+  return toWav(out,osr)}
+const RC={g:'w',i:0,stream:null,mr:null,raf:0,ok:false};
+const recItems=()=>FK.filter(x=>x.g===RC.g);
+function recPaint(){const it=recItems(),f=it[RC.i];
+  document.querySelectorAll('#rtabs button').forEach(b=>b.classList.toggle('on',b.dataset.g===RC.g));
+  $('rcount').textContent=`${RC.i+1} / ${it.length}  ・ ろくおんずみ ${it.filter(x=>DB.mem.has(x.k)).length}`;
+  const n=+f.k.slice(1);$('rpic').innerHTML=`<use href="#s-${f.g==='n'?'baby':WORDS[n][2]}"/>`;
+  $('rtxt').textContent=f.k==='name'?(cfg.name?callText()+'〜？':'(なまえ)〜？'):f.k==='yay'?'はーい！じょうずに おへんじ できたね':f.g==='w'?PHR[n]:WORDS[n][0];
+  $('rplay').disabled=!DB.mem.has(f.k);$('rprev').disabled=RC.i===0;$('rnext').textContent=RC.i===it.length-1?'さいごです':'つぎ →'}
+async function openRec(g='w',i=0){RC.g=g;RC.i=Math.max(0,i);$('fpanel').classList.remove('on');$('rec').classList.add('on');recPaint();
+  if(RC.stream)return;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume();
+    RC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});RC.ok=true;$('rfile').style.display='none'}
+  catch(e){RC.ok=false;$('rst').textContent='この がめんでは マイクが つかえません。Claudeの そとで ひらくと ろくおん できます。いまは ファイルから えらべます';$('rfile').style.display='grid';$('rgo').disabled=true}}
+function recStop(){if(RC.mr&&RC.mr.state!=='inactive')RC.mr.stop()}
+function recStart(){if(!RC.ok||RC.mr&&RC.mr.state==='recording')return;stopAll();
+  const chunks=[],mr=new MediaRecorder(RC.stream);RC.mr=mr;const key=recItems()[RC.i].k;
+  mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  mr.onstop=async()=>{cancelAnimationFrame(RC.raf);$('rgo').classList.remove('live');$('rgo').textContent='ろくおん';$('rgo').style.setProperty('--lv',0);
+    $('rst').textContent='しあげています…';
+    try{const w=await trimAudio(new Blob(chunks,{type:mr.mimeType||'audio/mp4'}));
+      if(!w){$('rst').textContent='こえが きこえませんでした。もういちど どうぞ';return}
+      await DB.put(key,w);recPaint();$('rst').textContent='とれました！ きいて たしかめてね';say(key,'')}
+    catch(e){$('rst').textContent='うまく とれませんでした。もういちど どうぞ'}};
+  mr.start();$('rgo').classList.add('live');$('rgo').textContent='とめる';$('rst').textContent='どうぞ、よんでね…';
+  const src=actx.createMediaStreamSource(RC.stream),an=actx.createAnalyser();an.fftSize=1024;src.connect(an);
+  const buf=new Float32Array(an.fftSize),t0=performance.now();let heard=false,quiet=0,last=t0;
+  const loop=now=>{if(mr.state!=='recording')return;an.getFloatTimeDomainData(buf);let s=0;for(const v of buf)s+=v*v;const r=Math.sqrt(s/buf.length);
+    $('rgo').style.setProperty('--lv',Math.min(r*4,.25));const dt=now-last;last=now;
+    if(r>.03)heard=true,quiet=0;else if(heard)quiet+=dt;
+    if((heard&&quiet>1100)||now-t0>8000)return recStop(); // しずかに なったら じどうで とまる
+    RC.raf=requestAnimationFrame(loop)};RC.raf=requestAnimationFrame(loop)}
+$('rgo').onclick=()=>{if(RC.mr&&RC.mr.state==='recording')recStop();else recStart()};
+$('rplay').onclick=()=>say(recItems()[RC.i].k,'');
+$('rprev').onclick=()=>{recStop();if(RC.i>0){RC.i--;recPaint()}};
+$('rnext').onclick=()=>{recStop();if(RC.i<recItems().length-1){RC.i++;recPaint()}};
+$('rtabs').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;recStop();RC.g=b.dataset.g;RC.i=0;recPaint()};
+$('rfile').querySelector('input').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;await DB.put(recItems()[RC.i].k,f);recPaint();$('rst').textContent='いれました'};
+$('rclose').onclick=()=>{recStop();if(RC.stream){RC.stream.getTracks().forEach(t=>t.stop());RC.stream=null}$('rgo').disabled=false;$('rec').classList.remove('on');renderFiles();$('fpanel').classList.add('on')};
+$('recopen').onclick=()=>{const it=FK.filter(x=>x.g==='w');openRec('w',Math.max(0,it.findIndex(x=>!DB.mem.has(x.k))))};
+
+$('mwords').onchange=e=>handleMerged(e.target,'w');
+$('mquiz').onchange=e=>handleMerged(e.target,'q');
+$('scriptW').innerHTML=PHR.map(s=>`<li>${s}</li>`).join('');$('scriptQ').innerHTML=WORDS.map(w=>`<li>${w[0]}</li>`).join('');
+$('mname').onchange=e=>handleMerged(e.target,'name');
+
+/* ---------- なまえを よぶ → おへんじ ---------- */
+const lov=$('listen'),mic=$('mic');
+let actx=null,session=null;
+function stopListen(){if(!session)return;const s=session;session=null;clearTimeout(s.to);cancelAnimationFrame(s.raf);
+  if(s.stream)s.stream.getTracks().forEach(t=>t.stop());mic.style.setProperty('--lv',0);lov.classList.remove('on')}
+function success(){if(!session)return;stopListen();say('yay','はーい！じょうずに おへんじ できたね',{pitch:1.4,rate:.85});celebrate()}
+async function startMic(s){
+  try{
+    s.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:false}});
+    if(session!==s){s.stream.getTracks().forEach(t=>t.stop());return}
+    const src=actx.createMediaStreamSource(s.stream),an=actx.createAnalyser();an.fftSize=1024;src.connect(an);
+    const buf=new Float32Array(an.fftSize);let base=0,n=0,hot=0;const t0=performance.now();
+    const loop=()=>{if(session!==s)return;an.getFloatTimeDomainData(buf);let sum=0;for(const v of buf)sum+=v*v;const rms=Math.sqrt(sum/buf.length);
+      mic.style.setProperty('--lv',Math.min(rms*6,.5));
+      if(performance.now()-t0<400){base+=rms;n++}else{const th=Math.max(cfg.sens,(base/(n||1))*3);hot=rms>th?hot+1:0;if(hot>=6)return success()}
+      s.raf=requestAnimationFrame(loop)};loop();
+    $('mnote').textContent='こえを きいているよ…';
+  }catch(e){$('mnote').textContent='マイクが つかえないので、おへんじしたら おうちのひとが「はーい！」を おしてね'}
+}
+$('call').onclick=async()=>{
+  if(!cfg.name){openSetup();return}
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}
+  stopListen();const s={};session=s;keepAwake();
+  $('lname').textContent=callText()+'〜';$('mnote').textContent='あかちゃんが こえを だすと、マイクが きいて うごきます';
+  lov.classList.add('on');
+  await say('name',callText()+'〜？',{pitch:1.35,rate:.72});
+  if(session!==s)return;
+  if(actx&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)startMic(s);
+  else $('mnote').textContent='おへんじしたら おうちのひとが「はーい！」を おしてね';
+  s.to=setTimeout(()=>{if(session===s){stopListen();speak('また よぶね',soft)}},9000);
+};
+$('hai').onclick=success;
+$('lclose').onclick=()=>{stopListen();stopAll()};
+
+paint();
+DB.open().then(()=>DB.load());
+if(!cfg.name)openSetup();
+}
+</script>
+</body>
+</html>
